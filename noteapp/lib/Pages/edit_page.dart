@@ -1,28 +1,34 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:noteapp/services/database.dart';
 
-class NewPage extends StatefulWidget {
-  const NewPage({super.key});
+class EditPage extends StatefulWidget {
+  final int id;
+  final String title;
+  final String content;
+  EditPage({super.key, required this.id, required this.title, required this.content,});
 
   @override
-  State<NewPage> createState() => _NewPageState();
+  State<EditPage> createState() => _EditPageState();
 }
 
-class _NewPageState extends State<NewPage> {
+class _EditPageState extends State<EditPage> {
   final DatabaseService _databaseService = DatabaseService.instance;
+  final TextEditingController _titleController = TextEditingController();
 
-  late String _title;
-  late String _content;
-
-  // My functions
-  String GenerateCurrentDate(){
-    final DateFormat formatter = DateFormat("yyyy - MM - dd");
-    DateTime now = DateTime.now();
-    return formatter.format(now);
-  }
+  final TextEditingController _contentController = TextEditingController();
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    setState(() {
+      _titleController.text = widget.title;
+      _contentController.text = widget.content;
+    });
+  }
+
+    @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar:  AppBar(title: Text("Notes",style:TextStyle(color: Colors.white),),
@@ -42,9 +48,7 @@ class _NewPageState extends State<NewPage> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: TextField(
-                onChanged: (value){
-                  _title = value;
-                },
+                controller: _titleController,
                  style: TextStyle(fontSize: 16, color: Colors.white),
                     decoration: InputDecoration(
                     contentPadding: EdgeInsets.symmetric(vertical: 12),
@@ -55,9 +59,7 @@ class _NewPageState extends State<NewPage> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: TextField(
-                onChanged: (value) {
-                  _content = value;
-                },
+                controller: _contentController,
                  style: TextStyle(fontSize: 16, color: Colors.white),
                     decoration: InputDecoration(
                     contentPadding: EdgeInsets.symmetric(vertical: 12),
@@ -74,8 +76,10 @@ class _NewPageState extends State<NewPage> {
          
           floatingActionButton: FloatingActionButton(
           onPressed: () {
-            // if((_content!=null || _content=="") && (_title!=null || _title=="")) return;
-            _databaseService.addNote( _title, _content, GenerateCurrentDate());
+            _databaseService.updateNote(widget.id,_titleController.text,_contentController.text);
+            setState(() {
+              
+            });
             Navigator.pushNamed(context, '/pageprincipal');
           }, 
           child: Icon(Icons.save_alt_outlined, color: Colors.white,),backgroundColor: Color.fromARGB(255, 2, 0, 31),

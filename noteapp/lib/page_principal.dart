@@ -1,27 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:noteapp/Pages/edit_page.dart';
+import 'package:noteapp/models/note.dart';
 import 'package:noteapp/services/database.dart';
 import 'package:noteapp/utils/dropdrown.dart';
 import 'package:noteapp/utils/note_liste.dart';
 
 // ignore: must_be_immutable
-class PagePrincipal extends StatelessWidget {
+class PagePrincipal extends StatefulWidget {
 
   
-final DatabaseService _databaseService = DatabaseService.instance;
 
   PagePrincipal({super.key});
+
+  @override
+  State<PagePrincipal> createState() => _PagePrincipalState();
+}
+
+class _PagePrincipalState extends State<PagePrincipal> {
+final DatabaseService _databaseService = DatabaseService.instance;
 
   List listeNote = [
     {'title':'note 1', 'content':'List of content', 'color': Colors.blue},
     {'title':'note 2', 'content':'List of content', 'color': Colors.yellow},
     {'title':'note 3', 'content':'List of content', 'color': Colors.red},
   ];
-  
-
 
   @override
   Widget build(BuildContext context) {
-
 
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 48, 48, 48) ,
@@ -82,28 +87,65 @@ final DatabaseService _databaseService = DatabaseService.instance;
               ),
             ),
         ),
-        Expanded(child: GridView.builder(
-          itemCount: listeNote.length,
+        FutureBuilder(future: _databaseService.getNote(), builder: (context,snapshot){
+          if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                 print("Erreur: ${snapshot.error}");
+                return Center(child: Text("An error occurred ${snapshot.error}"));
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return Center(child: Text("No notes found"));
+              }
+          return GridView.builder(
+          itemCount: snapshot.data?.length??0,
           shrinkWrap: true, 
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2), itemBuilder: (context,index)=> Container(
-          color: listeNote[index]['color'],
-          margin: EdgeInsets.all(20),
-          child: Column(children: [
-            Padding(
-              padding: const EdgeInsets.only(left:8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(listeNote[index]['title'],style: TextStyle(fontSize: 20,),),
-                  DropDown()
-                ],
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2), 
+          itemBuilder: (context,index){
+          Notes note = snapshot.data![index];
+          return GestureDetector(
+            onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=>EditPage(id: note.id, title: note.title, content: note.content)));
+            },
+            child: Container(
+            color: Colors.green,
+            margin: EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+              Padding(
+                padding: const EdgeInsets.only(left:8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(note.title,style: TextStyle(fontSize: 20,),),
+                    DropDown(
+                      onDelete: (){
+                        print(note.id);
+                        _databaseService.deleteNote(note.id);
+                        setState(() {
+                          
+                        });
+                      },
+                      onEdit: (){
+                        Navigator.push(context, MaterialPageRoute(builder: (context)=>EditPage(id: note.id, title: note.title, content: note.content)));
+                      },
+                      onPrivate: (){},
+                    )
+                  ],
+                ),
               ),
-            ),
-            Divider(),
-            Text(listeNote[index]['content']),
-            
-          ],),
-        )))
+              Divider(),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                child: Text(note.content, maxLines: 3, // Set the maximum number of lines to display
+                  overflow: TextOverflow.ellipsis, // Use ellipsis to truncate the text
+                  ),
+              ),
+              
+            ],),
+                    ),
+          );});
+        }),
        ],
        ),
       

@@ -4,7 +4,16 @@ enum SampleItem { itemOne, itemTwo, itemThree }
 
 class DropDown extends StatefulWidget {
   List<String> list = <String>['One', 'Two', 'Three', 'Four'];
-  DropDown({super.key});
+  final VoidCallback onDelete;
+  final VoidCallback onEdit;
+  final VoidCallback onPrivate;
+
+  DropDown({
+    super.key,
+    required this.onDelete,
+    required this.onEdit,
+    required this.onPrivate,
+  });
 
   @override
   State<DropDown> createState() => _DropDownState();
@@ -70,13 +79,13 @@ class _DropDownState extends State<DropDown> {
         onSelected: (value) {
           switch (value) {
             case SampleItem.itemOne:
-              print("Numéro 1 choisie");
+              widget.onDelete();
               break;
             case SampleItem.itemTwo:
-              print("Numéro 2 choisie");
+              widget.onEdit();
               break;
             case SampleItem.itemThree:
-              print("Numéro 3 choisie");
+              widget.onPrivate();
               break;
             default:
           }
